@@ -1,8 +1,10 @@
 package com.company;
+
 import com.company.interfaces.DbFunctions;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+
+import java.sql.*;
 
 public class PostgresDb implements DbFunctions {
     private final Config config = Config.INSTANCE;
@@ -36,17 +38,32 @@ public class PostgresDb implements DbFunctions {
 
 
     @Override
-    public void insertRow(Connection conn, String query) {
-        Statement statement;
+    public void insertRow(Connection conn,int rowId, Sheet sheet) {
         try {
-            statement = conn.createStatement();
-            statement.executeUpdate(query);
+            String query = String.format("INSERT INTO %s(orderId, OrderDate, OrderQuantity, Sales, ShipMode) VALUES(?, ?, ?, ?, ?)", tableName);
+            PreparedStatement statement = conn.prepareStatement(query);
+
+            Row row = sheet.getRow(rowId);
+
+            String orderId = row.getCell(0).toString();
+            String orderDate = row.getCell(1).toString();
+            String orderQuantity = row.getCell(2).toString();
+            String sales = row.getCell(3).toString();
+            String shipMode = row.getCell(4).toString();
+
+            statement.setString(1, orderId);
+            statement.setString(2, orderDate);
+            statement.setString(3, orderQuantity);
+            statement.setString(4, sales);
+            statement.setString(5, shipMode);
+
+            statement.executeUpdate();
             statement.close();
-        } catch (Exception e) {
+
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
     @Override
     public void createTable(Connection conn) {
         Statement statement;
